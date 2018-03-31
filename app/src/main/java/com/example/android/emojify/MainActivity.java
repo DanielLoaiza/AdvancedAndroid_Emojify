@@ -187,6 +187,8 @@ public class MainActivity extends AppCompatActivity {
         // TODO (3): Call the new detectFaces() method, passing in the resampled bitmap to detect the faces in the picture.
 
         // Set the new bitmap to the ImageView
+        mResultsBitmap = Emojifier.Companion.detectFacesAndOverlayEmoji(this, mResultsBitmap);
+
         mImageView.setImageBitmap(mResultsBitmap);
     }
 
