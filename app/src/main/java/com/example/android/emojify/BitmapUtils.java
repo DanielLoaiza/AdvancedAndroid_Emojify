@@ -20,12 +20,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.content.FileProvider;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import com.google.android.gms.vision.face.Face;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,6 +41,7 @@ import java.util.Locale;
 class BitmapUtils {
 
     private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.fileprovider";
+    private static final float EMOJI_SCALE_FACTOR = 1F;
 
 
     /**
@@ -190,5 +194,37 @@ class BitmapUtils {
         Uri photoURI = FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, imageFile);
         shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         context.startActivity(shareIntent);
+    }
+
+    static Bitmap addBitmapToFace(Bitmap backgroundBitmap, Bitmap emojiBitmap, Face face) {
+
+        // Initialize the results bitmap to be a mutable copy of the original image
+        Bitmap resultBitmap = Bitmap.createBitmap(backgroundBitmap.getWidth(),
+                backgroundBitmap.getHeight(), backgroundBitmap.getConfig());
+
+        // Scale the emoji so it looks better on the face
+        float scaleFactor = EMOJI_SCALE_FACTOR;
+
+        // Determine the size of the emoji to match the width of the face and preserve aspect ratio
+        int newEmojiWidth = (int) (face.getWidth() * scaleFactor);
+        int newEmojiHeight = (int) (emojiBitmap.getHeight() *
+                newEmojiWidth / emojiBitmap.getWidth() * scaleFactor);
+
+
+        // Scale the emoji
+        emojiBitmap = Bitmap.createScaledBitmap(emojiBitmap, newEmojiWidth, newEmojiHeight, false);
+
+        // Determine the emoji position so it best lines up with the face
+        float emojiPositionX =
+                (face.getPosition().x + face.getWidth() / 2) - emojiBitmap.getWidth() / 2;
+        float emojiPositionY =
+                (face.getPosition().y + face.getHeight() / 2) - emojiBitmap.getHeight() / 3;
+
+        // Create the canvas and draw the bitmaps to it
+        Canvas canvas = new Canvas(resultBitmap);
+        canvas.drawBitmap(backgroundBitmap, 0, 0, null);
+        canvas.drawBitmap(emojiBitmap, emojiPositionX, emojiPositionY, null);
+
+        return resultBitmap;
     }
 }
